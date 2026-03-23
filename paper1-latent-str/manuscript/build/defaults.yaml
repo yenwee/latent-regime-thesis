@@ -1,0 +1,43 @@
+# Pandoc defaults for JFEC (Journal of Financial Econometrics)
+# Oxford University Press - Chicago 15th Edition Style
+
+# Input/Output
+from: markdown+yaml_metadata_block+tex_math_dollars+raw_tex+citations+smart
+to: pdf
+
+# PDF Engine
+pdf-engine: xelatex
+
+# Template
+template: jfec-template.tex
+
+# Bibliography
+citeproc: true
+bibliography: references.bib
+csl: chicago-author-date.csl
+
+# Variables for template
+variables:
+  documentclass: article
+  classoption:
+    - 12pt
+    - a4paper
+  geometry:
+    - margin=1in
+  linestretch: 2
+  fontsize: 12pt
+  mainfont: "Times New Roman"
+  sansfont: "Helvetica"
+  monofont: "Courier New"
+  mathfont: "Latin Modern Math"
+  linkcolor: black
+  citecolor: black
+  urlcolor: black
+
+# Metadata defaults
+metadata:
+  lang: en-US
+
+# Processing options
+number-sections: true
+toc: false

@@ -1,0 +1,169 @@
+# Paper 2: Shared Latent Regime Configuration
+# Extends Paper 1 config with multivariate settings
+
+# Random seed
+seed: 123
+
+# Asset basket - same as Paper 1 (21 assets across 5 classes)
+# Can be modified for subset experiments
+asset_basket:
+  # Equity Indices (4)
+  - "^GSPC"   # S&P 500
+  - "^NDX"    # Nasdaq 100
+  - "^RUT"    # Russell 2000
+  - "^DJI"    # Dow Jones
+  # Equity Sectors (4)
+  - "XLF"     # Financials
+  - "XLK"     # Tech
+  - "XLE"     # Energy
+  - "XLU"     # Utilities
+  # Rates/Duration (5)
+  - "^IRX"    # 13-week T-bill yield
+  - "^TNX"    # 10Y Treasury yield
+  - "^TYX"    # 30Y Treasury yield
+  - "IEF"     # 7-10Y Treasury ETF
+  - "TLT"     # 20+Y Treasury ETF
+  # FX Majors (4)
+  - "EURUSD=X"
+  - "USDJPY=X"
+  - "GBPUSD=X"
+  - "AUDUSD=X"
+  # Commodities (4)
+  - "CL=F"    # WTI Crude Oil
+  - "GC=F"    # Gold
+  - "NG=F"    # Natural Gas
+  - "HG=F"    # Copper
+
+# Data parameters
+data:
+  start: "2015-01-01"
+  end: "2025-12-31"
+  interval: "1d"
+
+# Rolling/Expanding window
+rolling:
+  window: 600           # ~2.4 years
+  min_start: 260        # minimum 1 year before OOS start
+  retrain_freq: "A"     # yearly retraining
+
+# Forecast horizons
+horizons:
+  - 1
+  - 5
+  - 22
+
+# =============================================================================
+# PAPER 2 SPECIFIC: Multivariate State-Space Model
+# =============================================================================
+multivariate_ssm:
+  latent_dim: 4         # Higher dim for multi-asset (vs 2 in Paper 1)
+  epochs: 800           # More epochs for larger model
+  lr: 0.001             # Lower LR for stability
+  weight_decay: 0.0001
+  gru_hidden: 32        # Larger hidden for multi-asset (vs 16)
+  decoder_hidden: 64    # Larger decoder (vs 32)
+  patience: 80          # More patience
+  dropout: 0.15
+  batch_size: 64
+  seq_length: 250
+
+  # Input configuration
+  input_features:
+    - "rv"              # Realized variance (always included)
+    # - "returns"       # Uncomment to add returns
+    # - "volume"        # Uncomment to add volume
+
+  # Regime projection: how to map z_t -> scalar q_t
+  projection: "learned"  # Options: "learned", "mean", "first_dim"
+
+  # Missing data handling
+  missing_data: "forward_fill"  # Options: "forward_fill", "mask", "drop"
+
+# =============================================================================
+# PAPER 2 SPECIFIC: Benchmark Configurations
+# =============================================================================
+benchmarks:
+  # PCA-based common factor
+  pca:
+    n_components: 1     # Use first PC as regime proxy
+
+  # VIX as observable proxy
+  vix:
+    ticker: "^VIX"
+    smooth_span: 5      # EWMA smoothing
+
+  # Cross-asset average
+  cross_avg:
+    method: "mean"      # Options: "mean", "median"
+    smooth_span: 5
+
+# =============================================================================
+# PAPER 2 SPECIFIC: Synchronization Analysis
+# =============================================================================
+synchronization:
+  # Stress episode definition
+  stress_threshold: 0.90  # Top 10% VIX days = stress
+  min_stress_duration: 5  # Minimum consecutive days
+
+  # Sync metrics
+  metrics:
+    - "correlation"     # Pairwise regime correlation
+    - "coherence"       # Spectral coherence
+    - "granger"         # Granger causality
+
+# =============================================================================
+# PAPER 2 SPECIFIC: Partial Pooling
+# =============================================================================
+partial_pooling:
+  # Estimate per-asset loadings on shared regime
+  estimate_loadings: true
+  loading_regularization: 0.01  # L2 on loadings
+
+# STR-HAR parameters (same as Paper 1 - per-asset fitting)
+str_har:
+  gamma_max: 12.0
+  gamma_lambda: 0.001
+  n_starts: 3
+  use_basinhopping: true
+  basinhopping_niter: 5
+
+# Transition variable smoothing
+smoothing:
+  q_obs_span: 10
+  q_ssm_span: 1         # No extra smoothing on shared regime
+
+# Risk evaluation parameters (same as Paper 1)
+risk:
+  alphas:
+    - 0.01
+    - 0.05
+  alpha_fz_dm: 0.01
+  nonoverlapping: true
+  use_rolling_k: true
+  rolling_nu: true
+  mean_adjust: true
+
+# Diebold-Mariano test
+dm_test:
+  base_lag: 20
+
+# Model Confidence Set
+mcs:
+  alpha: 0.10
+  block_size: 10
+  n_bootstrap: 1000
+
+# Experiment configuration
+experiment:
+  id: null              # Auto-generate timestamp
+  resume: true
+  checkpoint_format: "pkl"
+
+# Output paths
+output:
+  base_dir: "outputs"
+  tables_dir: "outputs/tables"
+  figures_dir: "outputs/figures"
+
+# Numerical stability
+epsilon: 1.0e-12

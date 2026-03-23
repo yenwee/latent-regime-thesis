@@ -1,0 +1,114 @@
+# Deep-LSTR Configuration
+# All values exactly match
+
+# Random seed
+seed: 123
+
+# Asset basket (21 assets across 5 classes)
+asset_basket:
+  # Equity Indices (4)
+  - "^GSPC"   # S&P 500
+  - "^NDX"    # Nasdaq 100
+  - "^RUT"    # Russell 2000
+  - "^DJI"    # Dow Jones
+  # Equity Sectors (4)
+  - "XLF"     # Financials
+  - "XLK"     # Tech
+  - "XLE"     # Energy
+  - "XLU"     # Utilities
+  # Rates/Duration (5)
+  - "^IRX"    # 13-week T-bill yield
+  - "^TNX"    # 10Y Treasury yield
+  - "^TYX"    # 30Y Treasury yield
+  - "IEF"     # 7-10Y Treasury ETF
+  - "TLT"     # 20+Y Treasury ETF
+  # FX Majors (4)
+  - "EURUSD=X"
+  - "USDJPY=X"
+  - "GBPUSD=X"
+  - "AUDUSD=X"
+  # Commodities (4)
+  - "CL=F"    # WTI Crude Oil
+  - "GC=F"    # Gold
+  - "NG=F"    # Natural Gas
+  - "HG=F"    # Copper
+
+# Data parameters
+data:
+  start: "2015-01-01"
+  end: "2025-12-31"
+  interval: "1d"
+
+# Rolling/Expanding window
+rolling:
+  window: 600           # ROLL_WINDOW: ~2.4 years
+  min_start: 260        # MIN_START: minimum 1 year before OOS start
+  retrain_freq: "A"     # RETRAIN_FREQ: yearly retraining
+
+# Forecast horizons
+horizons:
+  - 1
+  - 5
+  - 22
+
+# Deep State-Space Model (VRNN) parameters
+ssm:
+  latent_dim: 2         # LATENT_DIM
+  epochs: 600           # SSM_EPOCHS
+  lr: 0.002             # SSM_LR (2e-3)
+  weight_decay: 0.0001  # SSM_WD (1e-4)
+  gru_hidden: 16        # SSM_GRU_H
+  decoder_hidden: 32    # SSM_DEC_H
+  patience: 60          # SSM_PATIENCE
+  dropout: 0.1          # SSM_DROPOUT
+  batch_size: 64        # Implied batch size
+  seq_length: 250       # Implied sequence length
+
+# STR-HAR parameters
+str_har:
+  gamma_max: 12.0       # STR_GAMMA_MAX
+  gamma_lambda: 0.001   # STR_GAMMA_LAM (1e-3)
+  n_starts: 3           # N_STARTS
+  use_basinhopping: true  # USE_BASINHOPPING
+  basinhopping_niter: 5   # BH_NITER
+
+# Transition variable smoothing
+smoothing:
+  q_obs_span: 10        # QOBS_SMOOTH_SPAN (exponential smoothing)
+  q_ssm_span: 1         # QSSM_SMOOTH_SPAN
+
+# Risk evaluation parameters
+risk:
+  alphas:               # VaR/ES confidence levels
+    - 0.01
+    - 0.05
+  alpha_fz_dm: 0.01     # ALPHA_FZ_DM: alpha for FZ0 DM tests
+  nonoverlapping: true  # RISK_NONOVERLAPPING
+  use_rolling_k: true   # USE_ROLLING_K: rolling volatility scaling
+  rolling_nu: true      # ROLLING_NU: rolling Student-t df estimation
+  mean_adjust: true     # MEAN_ADJUST: mean-adjusted VaR/ES
+
+# Diebold-Mariano test
+dm_test:
+  base_lag: 20          # DM_LAG base (actual lag = max(20, 2*H))
+
+# Model Confidence Set
+mcs:
+  alpha: 0.10           # MCS significance level
+  block_size: 10        # Bootstrap block size
+  n_bootstrap: 1000     # Number of bootstrap samples
+
+# Experiment configuration
+experiment:
+  id: "exp_v1"            # Experiment ID (null = auto-generate timestamp)
+  resume: true            # Enable checkpoint resumability
+  checkpoint_format: "pkl"  # Checkpoint format: pkl or parquet
+
+# Output paths (relative to project root)
+output:
+  base_dir: "outputs"
+  tables_dir: "outputs/tables"
+  figures_dir: "outputs/figures"
+
+# Numerical stability
+epsilon: 1.0e-12

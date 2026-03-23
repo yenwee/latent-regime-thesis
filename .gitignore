@@ -1,0 +1,38 @@
+# OS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+venv/
+.venv/
+
+# Model artifacts
+*.pkl
+*.pt
+
+# Build artifacts
+combined_paper.md
+*.aux
+*.log
+*.out
+*.toc
+*.bbl
+*.blg
+nohup.out
+
+# Data/outputs (large, reproducible from code)
+**/data/
+**/outputs/
+**/checkpoints/
+**/asset_checkpoints/
+robustness_run*.log
+_variant_config.yaml
+
+# Literature PDFs (copyrighted)
+literature/
+
+# Private
+.private/
+**/CLAUDE.md

@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+venv/
+.venv/
+
+# OS
+.DS_Store
+
+# Data & outputs (large, reproducible)
+outputs/
+data/
+*.pkl
+*.pt
+*.parquet
+
+# Build intermediates
+*.aux
+*.log
+*.out
+*.toc
+*.bbl
+*.blg
+combined_paper.md
+nohup.out
+
+# Literature (copyrighted, stored in root literature/)
+literature/
+
+# IDE
+.idea/
+.vscode/
+
+# Keep: manuscript/, configs/, scripts/, src/, build output PDFs
+!manuscript/build/output/*.pdf

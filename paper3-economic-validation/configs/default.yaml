@@ -1,0 +1,182 @@
+# Paper 3: Economic Validation Configuration
+# Analyzes regime indicators from Paper 1 against external stress proxies
+
+seed: 123
+
+# =============================================================================
+# INPUT: Regime Indicators from Paper 1
+# =============================================================================
+regime_sources:
+  paper1:
+    path: "../paper1-latent-str/outputs/exp_v1"
+    type: "asset_specific"
+    description: "Asset-specific latent regimes (VRNN + STR-HAR)"
+
+# =============================================================================
+# EXTERNAL STRESS PROXIES (Held-Out for Validation)
+# =============================================================================
+stress_proxies:
+  # Volatility Risk Premium
+  vrp:
+    - ticker: "^VIX"
+      name: "VIX"
+      source: "yahoo"
+    - ticker: "^VVIX"
+      name: "VVIX"
+      source: "yahoo"
+    # VRP = VIX - realized vol (computed)
+
+  # Funding Liquidity
+  funding:
+    - ticker: "TEDRATE"
+      name: "TED Spread"
+      source: "fred"
+    - ticker: "T10Y3M"
+      name: "Term Spread"
+      source: "fred"
+
+  # Option-Implied Skew
+  skew:
+    - ticker: "^SKEW"
+      name: "CBOE SKEW"
+      source: "yahoo"
+
+  # Credit Stress
+  credit:
+    - ticker: "BAMLH0A0HYM2"
+      name: "HY OAS"
+      source: "fred"
+    - ticker: "BAMLC0A4CBBB"
+      name: "BBB OAS"
+      source: "fred"
+
+  # Correlation (computed from returns)
+  correlation:
+    compute: true
+    assets: "from_paper1"  # Use same asset basket
+    window: 22             # 1-month rolling correlation
+
+# =============================================================================
+# LEAD-LAG ANALYSIS
+# =============================================================================
+lead_lag:
+  max_lag: 20              # Test lags from -20 to +20 days
+  significance: 0.05       # Significance level for Granger tests
+
+  granger:
+    max_order: 5           # Max lag order for Granger causality
+
+  cross_correlation:
+    compute: true
+    confidence: 0.95
+
+# =============================================================================
+# PREDICTIVE REGRESSIONS
+# =============================================================================
+predictive:
+  horizons:
+    - 1
+    - 5
+    - 22
+
+  # Dependent variables (outcomes to predict)
+  outcomes:
+    - "tail_dependence"    # Copula-based tail dependence
+    - "correlation_spike"  # Cross-asset correlation > threshold
+    - "vrp_level"          # Volatility risk premium
+    - "credit_spread"      # HY spread changes
+
+  # Controls (to show regime adds value ABOVE these)
+  controls:
+    - "rv_level"           # Current realized volatility
+    - "vix_level"          # Current VIX
+    - "lagged_outcome"     # AR(1) term
+
+  # Regression settings
+  newey_west_lags: 22      # HAC standard errors
+
+# =============================================================================
+# EVENT STUDY / CRISIS EPISODES
+# =============================================================================
+crisis_episodes:
+  - name: "Volmageddon"
+    start: "2018-02-01"
+    peak: "2018-02-05"
+    end: "2018-02-28"
+    description: "XIV collapse, VIX spike"
+
+  - name: "COVID Crash"
+    start: "2020-02-20"
+    peak: "2020-03-16"
+    end: "2020-04-30"
+    description: "Pandemic-driven market crash"
+
+  - name: "Rate Shock 2022"
+    start: "2022-09-01"
+    peak: "2022-10-15"
+    end: "2022-11-30"
+    description: "Fed tightening, bond selloff"
+
+  - name: "SVB Crisis"
+    start: "2023-03-08"
+    peak: "2023-03-13"
+    end: "2023-03-31"
+    description: "Regional banking stress"
+
+event_study:
+  window_before: 20        # Days before crisis start
+  window_after: 40         # Days after crisis peak
+  normalize: true          # Normalize to pre-crisis mean
+
+# =============================================================================
+# DISTRIBUTIONAL ANALYSIS
+# =============================================================================
+distributional:
+  # Define regime states
+  regime_thresholds:
+    high: 0.75             # Top 25% = high regime
+    low: 0.25              # Bottom 25% = low regime
+
+  # Compare distributions across regime states
+  tests:
+    - "ks_test"            # Kolmogorov-Smirnov
+    - "mann_whitney"       # Non-parametric location test
+    - "levene"             # Variance equality
+
+  # Variables to compare
+  compare:
+    - "returns"
+    - "tail_probability"
+    - "cross_correlation"
+    - "liquidity"
+
+# =============================================================================
+# CASE STUDY CONFIGURATION
+# =============================================================================
+case_studies:
+  episodes:
+    - "Volmageddon"
+    - "COVID Crash"
+    - "Rate Shock 2022"
+
+  # What to show per episode
+  plot_elements:
+    - "regime_trajectory"
+    - "vix_comparison"
+    - "observable_vs_latent"
+    - "false_positive_highlight"
+
+  # Annotations
+  annotate_events: true
+  show_confidence_bands: true
+
+# =============================================================================
+# OUTPUT
+# =============================================================================
+output:
+  base_dir: "outputs"
+  tables_dir: "outputs/tables"
+  figures_dir: "outputs/figures"
+
+# Numerical stability
+epsilon: 1.0e-12

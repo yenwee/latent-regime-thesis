@@ -1,0 +1,143 @@
+# Deep-LSTR Robustness Check Configuration
+# Extends default.yaml with robustness-specific settings
+
+# Inherit base settings from default
+_base: default.yaml
+
+# Random seed (same as baseline for comparability)
+seed: 123
+
+# Robustness check definitions
+robustness:
+  # 6.1 Alternative Latent Dimensions
+  latent_dims:
+    enabled: true
+    values: [1, 2, 4, 8]
+    baseline: 2
+    horizon: 5  # Focus on weekly horizon for Table 7
+
+  # 6.2 Alternative Transition Functions
+  transition_fns:
+    enabled: true
+    values:
+      - name: "logistic"
+        params: 9
+      - name: "exponential"
+        params: 9
+      - name: "double_logistic"
+        params: 10
+    baseline: "logistic"
+    horizon: 5  # Focus on weekly horizon for Table 8
+
+  # 6.3 Subsample Stability
+  subsample:
+    enabled: true
+    window_years: 2
+    periods:
+      - name: "2017-2018"
+        start: "2017-01-01"
+        end: "2018-12-31"
+      - name: "2019-2020"
+        start: "2019-01-01"
+        end: "2020-12-31"
+      - name: "2021-2022"
+        start: "2021-01-01"
+        end: "2022-12-31"
+      - name: "2023-2024"
+        start: "2023-01-01"
+        end: "2024-12-31"
+    horizon: 5  # Focus on weekly horizon for Table 9
+
+  # 6.4 Alternative Volatility Estimators
+  volatility_estimators:
+    enabled: true
+    values:
+      - "garman_klass"
+      - "parkinson"
+      - "rogers_satchell"
+    baseline: "garman_klass"
+    horizon: 5  # Focus on weekly horizon for Table 10
+
+# Experiment configuration for robustness runs
+experiment:
+  id: "robustness_v1"
+  resume: true
+  checkpoint_format: "pkl"
+
+# Output paths
+output:
+  base_dir: "outputs"
+  tables_dir: "outputs/robustness/tables"
+  figures_dir: "outputs/robustness/figures"
+
+# Asset basket (same as baseline)
+asset_basket:
+  - "^GSPC"
+  - "^NDX"
+  - "^RUT"
+  - "^DJI"
+  - "XLF"
+  - "XLK"
+  - "XLE"
+  - "XLU"
+  - "^TNX"
+  - "^TYX"
+  - "IEF"
+  - "TLT"
+  - "EURUSD=X"
+  - "USDJPY=X"
+  - "GBPUSD=X"
+  - "AUDUSD=X"
+  - "CL=F"
+  - "GC=F"
+  - "NG=F"
+  - "HG=F"
+
+# Data parameters (same as baseline)
+data:
+  start: "2015-01-01"
+  end: "2025-12-31"
+  interval: "1d"
+
+# Rolling window (same as baseline)
+rolling:
+  window: 600
+  min_start: 260
+  retrain_freq: "A"
+
+# Horizons to run (focus on H=5 for robustness tables)
+horizons:
+  - 5
+
+# SSM parameters (baseline - will be overridden per check)
+ssm:
+  latent_dim: 2
+  epochs: 600
+  lr: 0.002
+  weight_decay: 0.0001
+  gru_hidden: 16
+  decoder_hidden: 32
+  patience: 60
+  dropout: 0.1
+  batch_size: 64
+  seq_length: 250
+
+# STR-HAR parameters (baseline - will be overridden per check)
+str_har:
+  gamma_max: 12.0
+  gamma_lambda: 0.001
+  n_starts: 3
+  use_basinhopping: true
+  basinhopping_niter: 5
+  transition_fn: "logistic"
+
+# Smoothing (same as baseline)
+smoothing:
+  q_obs_span: 10
+  q_ssm_span: 1
+
+# MCS (same as baseline)
+mcs:
+  alpha: 0.10
+  block_size: 10
+  n_bootstrap: 1000
